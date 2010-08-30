@@ -1,4 +1,12 @@
-require 'digest/md5'
+#!/usr/bin/ruby
+
+# rate = RateLimit.new(60)
+# 
+# STDIN.each do |line|
+#     rpm = rate.record(line.chomp)
+# 
+#     puts line if rpm > 10
+# end
 
 # Simple class to track events and report
 # events per second or per defined time
@@ -8,6 +16,8 @@ require 'digest/md5'
 # this but I needed something quickly on
 # short notice and came up with this
 class RateLimit
+    require 'digest/md5'
+
     attr_reader :timespan
 
     # timespan - how many seconds you want to track events for.
@@ -30,33 +40,6 @@ class RateLimit
         @events << event
 
         domaint
-    end
-
-    # Attempts to calculate a per second
-    # figure for events, succeptable to
-    # skewing early on but tends to be
-    # correct after a number of events
-    def rate_per_second(event)
-        key = Digest::MD5.hexdigest(event)
-
-        oldest = Time.now.to_f
-        newest = 0
-        events = 0
-
-        @events.each do |e|
-            if e[:k] == key
-                events += 1
-
-                oldest = e[:t] if e[:t] < oldest
-                newest = e[:t]
-            end
-        end
-
-        if (newest - oldest) > 1
-            return events / (newest - oldest)
-        else
-            return 0
-        end
     end
 
     # How many times have the event been seen
