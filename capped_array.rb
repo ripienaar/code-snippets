@@ -2,7 +2,11 @@
 # over a given size
 #
 # New entries will go to the beginning of the
-# array and old ones will fall off the end
+# array and old ones will fall off the end.
+# I specifically wanted this behavior and so
+# sacrificed some speed, would be faster to
+# append to the array and remove from the
+# front.
 #
 #  >> a = CappedArray.new(10)
 #  => [nil, nil, nil, nil, nil, nil, nil, nil, nil, nil]
