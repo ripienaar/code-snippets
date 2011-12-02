@@ -25,7 +25,7 @@ module Versionable
   end
 
   def api_send(version, method, *args)
-    @api_impl[version].send(method, args)
+    @api_impl[version].send(method, *args)
   end
 
   def api_has_version?(version)
@@ -50,20 +50,20 @@ class Foo
 
   class V3
     def do_it(msg)
-      puts "version 3 got #{msg.inspect}"
+      puts "version 3 got '#{msg['message']}'"
     end
   end
 
   # 2 versions of the do_it method inline in the same class
   version 1 do
     def do_it(msg)
-      puts "version 1 got #{msg.inspect}"
+      puts "version 1 got '#{msg}'"
     end
   end
 
   version 2 do
     def do_it(msg)
-      puts "version 2 got #{msg.inspect}"
+      puts "version 2 got '#{msg[:msg]}'"
     end
   end
 
@@ -82,7 +82,7 @@ end
 # the last call will fail with an exception saying version 4 isn't a known
 # API version
 f = Foo.new
-f.do_it("version 1 string")
-f.do_it({:v => 2, :msg => "version 2 hash"})
-f.do_it({:v => 3, :msg => "version 3 hash"})
-f.do_it({:v => 4, :msg => "version 4 hash"})
+f.do_it("version 1")
+f.do_it({:v => 2, :msg => "version 2"})
+f.do_it({:v => 3, "message" => "version 3"})
+f.do_it({:v => 4, :msg => "version 4"})
