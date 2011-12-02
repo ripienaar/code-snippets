@@ -44,16 +44,17 @@ module Versionable
   end
 end
 
-class V3
-  def do_it(msg)
-    puts "version 3 got #{msg.inspect}"
-  end
-end
-
 class Foo
   extend Versionable
   include Versionable
 
+  class V3
+    def do_it(msg)
+      puts "version 3 got #{msg.inspect}"
+    end
+  end
+
+  # 2 versions of the do_it method inline in the same class
   version 1 do
     def do_it(msg)
       puts "version 1 got #{msg.inspect}"
@@ -77,6 +78,9 @@ class Foo
   end
 end
 
+# instance of my class and talk to 3 different versions of its do_it method
+# the last call will fail with an exception saying version 4 isn't a known
+# API version
 f = Foo.new
 f.do_it("version 1 string")
 f.do_it({:v => 2, :msg => "version 2 hash"})
