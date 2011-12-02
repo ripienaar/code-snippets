@@ -2,54 +2,59 @@
 # to have multiple versioned implementations
 # on a single class
 module Versionable
-  class Container
-    def self.hide(name)
-      if instance_methods.include?(name.to_s) and
-        name !~ /^(__|instance_eval|send)/
-        undef_method name
-      end
+  class BlankSlate
+    instance_methods.each do |method|
+      undef_method method unless method =~ /^(__|instance_eval|send)/
+    end
+  end
+
+  module ClassHelpers
+    def versioned_send(version, method, *args)
+      raise "#{self.class} don't have a verion #{version} of the method #{method}" unless __api_has_version?(version)
+
+      __api_send(version, method, *args)
     end
 
-    # blank slate
-    instance_methods.each { |m| hide(m) }
+    def version(version, klass=nil, &block)
+      __api_register(version, klass, &block)
+    end
+
+    def __api_send(version, method, *args)
+      @__api_impl[version].send(method, *args)
+    end
+
+    def __api_has_version?(version)
+      !!@__api_impl[version]
+    end
+
+    def __api_register(version, klass, &block)
+      @__api_impl ||= {}
+
+      if klass
+        @__api_impl[version] = klass
+      else
+        @__api_impl[version] = BlankSlate.new
+        @__api_impl[version].instance_eval(&block) if block_given?
+      end
+    end
+  end
+
+  def self.included(base)
+    base.extend ClassHelpers
   end
 
   def versioned_send(version, method, *args)
-    raise "Don't have a verion #{version} of the method #{method}" unless self.class.api_has_version?(version)
+    raise "#{self.class} don't have a verion #{version} of the method #{method}" unless self.class.__api_has_version?(version)
 
-    self.class.api_send(version, method, *args)
+    self.class.__api_send(version, method, *args)
   end
 
   def version(version, klass=nil, &block)
-    if is_a?(Class)
-      api_register(version, klass, &block)
-    else
-      self.class.api_register(version, klass, &block)
-    end
-  end
-
-  def api_send(version, method, *args)
-    @api_impl[version].send(method, *args)
-  end
-
-  def api_has_version?(version)
-    !!@api_impl[version]
-  end
-
-  def api_register(version, klass, &block)
-    @api_impl ||= {}
-
-    if klass
-      @api_impl[version] = klass
-    else
-      @api_impl[version] = Container.new
-      @api_impl[version].instance_eval(&block) if block_given?
-    end
+    self.class.__api_register(version, klass, &block)
   end
 end
 
 class Foo
-  extend Versionable
   include Versionable
 
   class V3
