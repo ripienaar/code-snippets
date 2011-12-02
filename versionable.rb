@@ -91,11 +91,28 @@ class Foo
   end
 end
 
+# Inheritance works - no versions are inherited just
+# the proper methods so a API can just inherit from the
+# API base class and do the version jig
+class Bar<Foo
+  def initialize; end
+
+  version 1 do
+    def do_it(msg)
+      puts "Bar version 1 got '#{msg}'"
+    end
+  end
+end
+
 # instance of my class and talk to 3 different versions of its do_it method
-# the last call will fail with an exception saying version 4 isn't a known
-# API version
 f = Foo.new("meh")
 f.do_it("version 1")
-f.do_it({:v => 2, :msg => "version 2"})
-f.do_it({:v => 3, "message" => "version 3"})
-f.do_it({:v => 4, :msg => "version 4"})
+f.do_it(:msg => "version 2", :v => 2)
+f.do_it("message" => "version 3", :v => 3)
+
+b = Bar.new
+b.do_it "hello"
+
+# these will both fail saying it cant find the version in the api
+f.do_it("message" => "version 4", :v => 4) rescue puts $!
+b.do_it(:msg => "version 2", :v => 2) rescue puts $!
