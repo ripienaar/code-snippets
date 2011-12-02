@@ -21,7 +21,11 @@ module Versionable
   end
 
   def version(version, klass=nil, &block)
-    api_register(version, klass, &block)
+    if is_a?(Class)
+      api_register(version, klass, &block)
+    else
+      self.class.api_register(version, klass, &block)
+    end
   end
 
   def api_send(version, method, *args)
@@ -49,8 +53,12 @@ class Foo
   include Versionable
 
   class V3
+    def initialize(foo)
+      @foo = foo
+    end
+
     def do_it(msg)
-      puts "version 3 got '#{msg['message']}'"
+      puts "version 3 got '#{msg['message']}' foo is #{@foo}"
     end
   end
 
@@ -67,7 +75,12 @@ class Foo
     end
   end
 
-  version 3, V3.new
+  def initialize(foo)
+    # version 3 is special, it needs args passed to it specially etc,
+    # not a problem you can set it up here and the #do_it method will be
+    # proxied correctly
+    version 3, V3.new(foo)
+  end
 
   # a method that once just took a string and now takes
   # a hash that has a version identifier in it
@@ -81,7 +94,7 @@ end
 # instance of my class and talk to 3 different versions of its do_it method
 # the last call will fail with an exception saying version 4 isn't a known
 # API version
-f = Foo.new
+f = Foo.new("meh")
 f.do_it("version 1")
 f.do_it({:v => 2, :msg => "version 2"})
 f.do_it({:v => 3, "message" => "version 3"})
