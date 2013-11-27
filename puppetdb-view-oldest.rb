@@ -33,7 +33,9 @@ puts "Inactive Nodes: %d" % deactivated_nodes.size
 puts
 puts "10 oldest active nodes:"
 
-active_nodes.sort_by{|n| Time.parse(n["report_timestamp"])}[-10..-1].each do |node|
+active_nodes.size >= 10 ? start = -10 : start = 0
+
+active_nodes.sort_by{|n| Time.parse(n["report_timestamp"])}[start..-1].each do |node|
   puts "%#{longest_node_name + 5}s: %s" % [node["name"], Time.parse(node["report_timestamp"])]
 end
 
